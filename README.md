@@ -18,10 +18,11 @@ make
 You might also wanna add the following or Hyprland window rules to your wm or similar:
 
 ```
-windowrule = noblur, wlclock
-windowrule = noborder, wlclock
-windowrule = pin, wlclock
-windowrule = noshadow, wlclock
+windowrule = noblur, focusclock
+windowrule = noborder, focusclock
+windowrule = pin, focusclock
+windowrule = noshadow, focusclock
+bind = $mainMod ALT, M, exec, killall -SIGTERM focusclock || focusclock
 ```
 
 # References
