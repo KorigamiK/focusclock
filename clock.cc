@@ -6,18 +6,34 @@
 #include <ctime>
 #include <glibmm/main.h>
 
+// static members
+Cairo::TextExtents Clock::s_text_extents;
+bool Clock::s_size_calculated = false;
+int Clock::s_cached_width = 0;
+int Clock::s_cached_height = 0;
+double Clock::s_cached_font_size = 0;
+
 Clock::Clock() : m_radius(0.42), m_line_width(0.035) {
   set_draw_func(sigc::mem_fun(*this, &Clock::on_draw));
 
-  Glib::signal_timeout().connect(sigc::mem_fun(*this, &Clock::on_timeout),
-                                 2000);
+  // Calculate initial window size only once
+  if (!s_size_calculated) {
+    calculate_window_size(s_cached_width, s_cached_height);
+    s_size_calculated = true;
+  }
+  set_size_request(s_cached_width, s_cached_height);
 
-  int width = 0, height = 0;
-  calculate_window_size(width, height);
-  set_size_request(width, height);
+  // Start timer
+  calculate_next_update();
+  Glib::signal_timeout().connect(sigc::mem_fun(*this, &Clock::on_timeout), 1000);
 }
 
 Clock::~Clock() {}
+
+void Clock::calculate_next_update() {
+  time(&m_next_update);
+  m_next_update += 60 - (m_next_update % 60); // Next minute
+}
 
 void Clock::on_draw(const Cairo::RefPtr<Cairo::Context> &cr, int width,
                     int height) {
@@ -29,30 +45,28 @@ void Clock::on_draw(const Cairo::RefPtr<Cairo::Context> &cr, int width,
   time(&rawtime);
   struct tm *timeinfo = localtime(&rawtime);
 
-  char buffer[6];
+  static char buffer[6];
   strftime(buffer, sizeof(buffer), "%I:%M", timeinfo);
-  std::string time_text = buffer;
 
-  cr->select_font_face(FONT_FAMILY, Cairo::ToyFontFace::Slant::NORMAL,
-                       Cairo::ToyFontFace::Weight::BOLD);
-
-  double font_size = height * 0.8;
-  cr->set_font_size(font_size);
-
-  Cairo::TextExtents extents;
-  cr->get_text_extents(time_text, extents);
-
-  if (extents.width > width * 0.9) {
-    font_size *= (width * 0.9) / extents.width;
+  if (s_cached_font_size == 0) {
+    // Calculate font size once
+    double font_size = height * 0.8;
     cr->set_font_size(font_size);
-    cr->get_text_extents(time_text, extents);
+    cr->get_text_extents(buffer, s_text_extents);
+
+    if (s_text_extents.width > width * 0.9) {
+      font_size *= (width * 0.9) / s_text_extents.width;
+    }
+    s_cached_font_size = font_size;
   }
 
+  cr->set_font_size(s_cached_font_size);
+  cr->select_font_face(FONT_FAMILY, Cairo::ToyFontFace::Slant::NORMAL,
+                       Cairo::ToyFontFace::Weight::BOLD);
   cr->set_source_rgba(TEXT_COLOR_R, TEXT_COLOR_G, TEXT_COLOR_B, TEXT_COLOR_A);
-
-  cr->move_to((width - extents.width) / 2 - extents.x_bearing,
-              (height - extents.height) / 2 - extents.y_bearing);
-  cr->show_text(time_text);
+  cr->move_to((width - s_text_extents.width) / 2 - s_text_extents.x_bearing,
+              (height - s_text_extents.height) / 2 - s_text_extents.y_bearing);
+  cr->show_text(buffer);
 }
 
 void Clock::calculate_window_size(int &width, int &height) {
@@ -79,6 +93,13 @@ void Clock::calculate_window_size(int &width, int &height) {
 }
 
 bool Clock::on_timeout() {
-  queue_draw();
+  time_t now;
+  time(&now);
+
+  if (now >= m_next_update) {
+    calculate_next_update();
+    queue_draw();
+  }
+
   return true;
 }
