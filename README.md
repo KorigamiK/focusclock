@@ -15,19 +15,17 @@ cmake ..
 make
 ```
 
-You might also wanna add the following or Hyprland window rules to your wm or similar:
+You might also wanna add the keybinds like the following in your Hyprland config
+to your wm or similar:
 
 ```
-windowrule = noblur, focusclock
-windowrule = noborder, focusclock
-windowrule = pin, focusclock
-windowrule = noshadow, focusclock
-bind = $mainMod ALT, M, exec, killall -SIGTERM focusclock || focusclock -br -B 70 
+bind = $mainMod ALT, M, exec, killall -SIGTERM focusclock || focusclock -br -B 70
 ```
 
 ## Usage
 
-You can configure the position of the clock using the following command-line options:
+You can configure the position of the clock using the following command-line
+options:
 
 ```sh
 Usage:
