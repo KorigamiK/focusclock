@@ -22,7 +22,29 @@ windowrule = noblur, focusclock
 windowrule = noborder, focusclock
 windowrule = pin, focusclock
 windowrule = noshadow, focusclock
-bind = $mainMod ALT, M, exec, killall -SIGTERM focusclock || focusclock
+bind = $mainMod ALT, M, exec, killall -SIGTERM focusclock || focusclock -br -B 70 
+```
+
+## Usage
+
+You can configure the position of the clock using the following command-line options:
+
+```sh
+Usage:
+  focusclock [OPTION?]
+
+Help Options:
+  -h, --help              Show help options
+
+Application Options:
+  -t, --anchor-top        Anchor to the top edge
+  -b, --anchor-bottom     Anchor to the bottom edge
+  -l, --anchor-left       Anchor to the left edge
+  -r, --anchor-right      Anchor to the right edge
+  -T, --margin-top        Margin from the top edge
+  -B, --margin-bottom     Margin from the bottom edge
+  -L, --margin-left       Margin from the left edge
+  -R, --margin-right      Margin from the right edge
 ```
 
 # References
