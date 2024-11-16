@@ -1,12 +1,13 @@
 #include "clock.h"
+#include <cairo.h>
+#include <glibmm/optioncontext.h>
+#include <glibmm/optionentry.h>
+#include <glibmm/optiongroup.h>
 #include <gtk4-layer-shell/gtk4-layer-shell.h>
 #include <gtkmm/application.h>
 #include <gtkmm/aspectframe.h>
 #include <gtkmm/cssprovider.h>
 #include <gtkmm/window.h>
-#include <glibmm/optioncontext.h>
-#include <glibmm/optiongroup.h>
-#include <glibmm/optionentry.h>
 
 #define APP_ID "org.korigamik.focusclock"
 
@@ -74,9 +75,7 @@ int main(int argc, char **argv) {
     gtk_layer_init_for_window(window->gobj());
     gtk_layer_set_namespace(window->gobj(), APP_ID);
     gtk_layer_set_layer(window->gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
-    gtk_layer_set_keyboard_mode(
-        window->gobj(),
-        GtkLayerShellKeyboardMode::GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
+    gtk_layer_set_keyboard_mode(window->gobj(), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
     gtk_layer_set_exclusive_zone(window->gobj(), -1);
 
     gtk_layer_set_anchor(window->gobj(), GTK_LAYER_SHELL_EDGE_TOP, anchor_top);
@@ -102,6 +101,10 @@ int main(int argc, char **argv) {
         css_provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     window->show();
+
+    auto surface = window->get_surface();
+    auto empty_region = Cairo::Region::create();
+    surface->set_input_region(empty_region);
   });
 
   return app->run(argc, argv);
