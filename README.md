@@ -4,6 +4,16 @@ Bigass clock that sits on top of all windows to help you focus.
 
 ![Screenshot](./.github/screenshot.png)
 
+## Install
+
+Arch Linux users can install the package from the AUR:
+
+```sh
+yay -S focusclock-git
+```
+
+Or you can build it from source
+
 ## Building
 
 Requires Gtkmm4, gtk4-layer-shell, CMake, pkg-config.
