@@ -1,4 +1,5 @@
 #include "clock.h"
+#include "version.h"
 #include <cairo.h>
 #include <glibmm/optioncontext.h>
 #include <glibmm/optionentry.h>
@@ -11,6 +12,7 @@
 #include <gtkmm/window.h>
 #include <iomanip>
 #include <sstream>
+#include <iostream>
 
 #define APP_ID "org.korigamik.focusclock"
 
@@ -111,10 +113,17 @@ int main(int argc, char **argv) {
   Glib::ustring font_family;
   Glib::ustring color_str;
   double alpha = 0.5;
+  bool show_version = false;
 
   Glib::OptionContext context;
   Glib::OptionGroup group("options", "Position Options");
   Glib::OptionEntry entry;
+
+  // Add version option before other options
+  entry.set_long_name("version");
+  entry.set_short_name('v');
+  entry.set_description("Show version information");
+  group.add_entry(entry, show_version);
 
   entry.set_long_name("anchor-top");
   entry.set_short_name('t');
@@ -193,6 +202,11 @@ int main(int argc, char **argv) {
 
   context.set_main_group(group);
   context.parse(argc, argv);
+
+  if (show_version) {
+    std::cout << "focusclock version " << FOCUSCLOCK_VERSION << std::endl;
+    return 0;
+  }
 
   if (opts.layer < GTK_LAYER_SHELL_LAYER_BACKGROUND ||
       opts.layer > GTK_LAYER_SHELL_LAYER_ENTRY_NUMBER) {

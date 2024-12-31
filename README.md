@@ -45,6 +45,7 @@ Help Options:
   -h, --help              Show help options
 
 Application Options:
+  -v, --version           Show version information
   -t, --anchor-top        Anchor to the top edge
   -b, --anchor-bottom     Anchor to the bottom edge
   -l, --anchor-left       Anchor to the left edge
@@ -53,6 +54,13 @@ Application Options:
   -B, --margin-bottom     Margin from the bottom edge
   -L, --margin-left       Margin from the left edge
   -R, --margin-right      Margin from the right edge
+  -f, --font-size         Base font size
+  -c, --color             Text color (hex format: RGB, RGBA, RRGGBB, or RRGGBBAA)
+  -F, --font-family       Font family name
+  -a, --alpha             Text opacity (0.0-1.0, overridden by RGBA color)
+  -y, --layer             GTK shell layer (0=background, 1=bottom, 2=top, 3=overlay, 4=no_layer)
+
+
 ```
 
 # References
