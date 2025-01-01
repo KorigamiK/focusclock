@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(focusclock VERSION 2.0.0)
+project(focusclock VERSION 2.0.1)
 
 configure_file(version.h.in version.h)
 
@@ -11,18 +11,19 @@ if(NOT PKG_CONFIG_FOUND)
 endif()
 
 pkg_check_modules(gtkmm-4.0 REQUIRED IMPORTED_TARGET gtkmm-4.0)
-pkg_check_modules(gtk4-layer-shell-0 REQUIRED)
+pkg_check_modules(gtk4-layer-shell REQUIRED gtk4-layer-shell-0)
 
 add_executable(${PROJECT_NAME}
   clock.cc
   main.cc
+  utils.cc
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR})
 
 target_link_libraries(${PROJECT_NAME} 
   PkgConfig::gtkmm-4.0
-  -lgtk4-layer-shell
+  gtk4-layer-shell
 )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})

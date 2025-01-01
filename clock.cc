@@ -1,7 +1,6 @@
 #include "clock.h"
 #include <ctime>
 #include <glibmm/main.h>
-#include <iostream>
 
 Cairo::TextExtents Clock::s_text_extents;
 bool Clock::s_size_calculated = false;
@@ -66,7 +65,7 @@ void Clock::on_draw(const Cairo::RefPtr<Cairo::Context> &cr, int width,
   cr->get_text_extents(buffer, s_text_extents);
 
   double x = (width - s_text_extents.width) / 2;
-  double y = height / 2 + (s_text_extents.height / 2);
+  double y = height / 2. + (s_text_extents.height / 2);
 
   cr->set_source_rgba(m_config.text_color[0], m_config.text_color[1],
                       m_config.text_color[2], m_config.text_color[3]);

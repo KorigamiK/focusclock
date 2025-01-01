@@ -59,8 +59,6 @@ Application Options:
   -F, --font-family       Font family name
   -a, --alpha             Text opacity (0.0-1.0, overridden by RGBA color)
   -y, --layer             GTK shell layer (0=background, 1=bottom, 2=top, 3=overlay, 4=no_layer)
-
-
 ```
 
 # References
