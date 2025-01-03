@@ -6,6 +6,7 @@ configure_file(version.h.in version.h)
 set(CMAKE_CXX_STANDARD 17)
 
 include(FindPkgConfig)
+include(GNUInstallDirs)
 if(NOT PKG_CONFIG_FOUND)
   message(FATAL_ERROR "pkg-config not found!" )
 endif()
@@ -26,4 +27,7 @@ target_link_libraries(${PROJECT_NAME}
   gtk4-layer-shell
 )
 
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT ${PROJECT_NAME}
+)

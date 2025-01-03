@@ -5,51 +5,84 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 2.0.1)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Is this a pre-release?'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:rolling
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Get version from tag
+      - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "Creating manual release for v${{ github.event.inputs.version }}"
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "Creating release from tag ${GITHUB_REF#refs/tags/}"
+          fi
+
+      - name: Update CMakeLists.txt version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          sed -i "s/project(focusclock VERSION [0-9.]*)/project(focusclock VERSION ${VERSION})/" CMakeLists.txt
 
       - name: Extract changelog
         id: extract_changelog
         run: |
           VERSION=${{ steps.get_version.outputs.VERSION }}
-          # Remove 'v' prefix for matching
           VERSION_NUM=${VERSION#v}
-          # Extract section between ## [$VERSION_NUM] and the next ##
           sed -n "/## \[$VERSION_NUM\]/,/## \[/p" CHANGELOG.md | sed '$d' > release_notes.md
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake pkg-config \
-            libgtkmm-4.0-dev libgtk-4-dev libgtk-layer-shell-dev
+          apt-get --assume-yes update
+          apt-get --assume-yes install build-essential cmake pkg-config \
+            wayland-protocols \
+            libgtkmm-4.0-dev libgtk4-layer-shell-dev
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config Release
 
+      - name: Install
+        run: |
+          DESTDIR=${{github.workspace}}/package cmake --install ${{github.workspace}}/build
+
       - name: Package
         run: |
-          cd ${{github.workspace}}/build
-          tar czf ../focusclock-linux-x86_64.tar.gz focusclock
+          cd ${{github.workspace}}/package
+          find . -type f -ls
+          tar -czvf ${{github.workspace}}/focusclock-linux-x86_64.tar.gz ./*
+          ls -la ${{github.workspace}}/focusclock-linux-x86_64.tar.gz
 
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: focusclock-linux-x86_64.tar.gz
+          files: ${{github.workspace}}/focusclock-linux-x86_64.tar.gz
           draft: false
-          prerelease: false
+          prerelease: ${{ github.event.inputs.prerelease || false }}
           body_path: release_notes.md
           generate_release_notes: false
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
