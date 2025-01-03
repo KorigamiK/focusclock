@@ -61,6 +61,10 @@ Application Options:
   -y, --layer             GTK shell layer (0=background, 1=bottom, 2=top, 3=overlay, 4=no_layer)
 ```
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
+
 # References
 
 - https://github.com/nwg-piotr/nwg-wrapper/
