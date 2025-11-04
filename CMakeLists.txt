@@ -12,7 +12,18 @@ if(NOT PKG_CONFIG_FOUND)
 endif()
 
 pkg_check_modules(gtkmm-4.0 REQUIRED IMPORTED_TARGET gtkmm-4.0)
-pkg_check_modules(gtk4-layer-shell REQUIRED gtk4-layer-shell-0)
+
+option(FOCUSCLOCK_ENABLE_LAYER_SHELL "Enable gtk4-layer-shell integration" ON)
+set(FOCUSCLOCK_HAS_LAYER_SHELL 0)
+if(FOCUSCLOCK_ENABLE_LAYER_SHELL)
+  pkg_check_modules(GTK4_LAYER_SHELL QUIET gtk4-layer-shell-0)
+  if(GTK4_LAYER_SHELL_FOUND)
+    set(FOCUSCLOCK_HAS_LAYER_SHELL 1)
+  else()
+    message(WARNING
+      "gtk4-layer-shell-0 not found; building without layer-shell support")
+  endif()
+endif()
 
 add_executable(${PROJECT_NAME}
   clock.cc
@@ -22,10 +33,20 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR})
 
-target_link_libraries(${PROJECT_NAME} 
-  PkgConfig::gtkmm-4.0
-  gtk4-layer-shell
-)
+target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::gtkmm-4.0)
+if(FOCUSCLOCK_HAS_LAYER_SHELL)
+  target_include_directories(${PROJECT_NAME} PRIVATE
+    ${GTK4_LAYER_SHELL_INCLUDE_DIRS})
+  target_link_directories(${PROJECT_NAME} PRIVATE
+    ${GTK4_LAYER_SHELL_LIBRARY_DIRS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+    ${GTK4_LAYER_SHELL_LIBRARIES})
+  target_compile_options(${PROJECT_NAME} PRIVATE
+    ${GTK4_LAYER_SHELL_CFLAGS_OTHER})
+endif()
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+  FOCUSCLOCK_HAS_LAYER_SHELL=${FOCUSCLOCK_HAS_LAYER_SHELL})
 
 install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

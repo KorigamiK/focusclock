@@ -6,12 +6,17 @@
 #include <glibmm/optionentry.h>
 #include <glibmm/optiongroup.h>
 #include <glibmm/ustring.h>
-#include <gtk4-layer-shell/gtk4-layer-shell.h>
 #include <gtkmm/application.h>
-#include <gtkmm/aspectframe.h>
 #include <gtkmm/cssprovider.h>
 #include <gtkmm/window.h>
-#include <iostream>
+
+#ifndef FOCUSCLOCK_HAS_LAYER_SHELL
+#define FOCUSCLOCK_HAS_LAYER_SHELL 0
+#endif
+
+#if FOCUSCLOCK_HAS_LAYER_SHELL
+#include <gtk4-layer-shell/gtk4-layer-shell.h>
+#endif
 
 #define APP_ID "org.korigamik.focusclock"
 
@@ -24,9 +29,14 @@ struct WindowLayerOptions {
   int margin_bottom = 0;
   int margin_left = 0;
   int margin_right = 0;
+#if FOCUSCLOCK_HAS_LAYER_SHELL
   int layer = GTK_LAYER_SHELL_LAYER_OVERLAY;
+#else
+  int layer = 0;
+#endif
 };
 
+#if FOCUSCLOCK_HAS_LAYER_SHELL
 static void setup_window_layer(Gtk::Window *window,
                                const WindowLayerOptions &opts) {
   if (opts.layer != GTK_LAYER_SHELL_LAYER_ENTRY_NUMBER) {
@@ -59,6 +69,13 @@ static void setup_window_layer(Gtk::Window *window,
     window->set_resizable(true);
   }
 }
+#else
+static void setup_window_layer(Gtk::Window *window,
+                               const WindowLayerOptions &) {
+  window->set_decorated(false);
+  window->set_resizable(false);
+}
+#endif
 
 int main(int argc, char **argv) {
   WindowLayerOptions opts;
@@ -148,11 +165,13 @@ int main(int argc, char **argv) {
   entry.set_description("Text opacity (0.0-1.0, overridden by RGBA color)");
   group.add_entry(entry, alpha);
 
+#if FOCUSCLOCK_HAS_LAYER_SHELL
   entry.set_long_name("layer");
   entry.set_short_name('y');
   entry.set_description(
       "GTK shell layer (0=background, 1=bottom, 2=top, 3=overlay, 4=no_layer)");
   group.add_entry(entry, opts.layer);
+#endif
 
   context.set_main_group(group);
   context.parse(argc, argv);
@@ -162,10 +181,12 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+#if FOCUSCLOCK_HAS_LAYER_SHELL
   if (opts.layer < GTK_LAYER_SHELL_LAYER_BACKGROUND ||
       opts.layer > GTK_LAYER_SHELL_LAYER_ENTRY_NUMBER) {
     opts.layer = GTK_LAYER_SHELL_LAYER_OVERLAY;
   }
+#endif
 
   auto app = Gtk::Application::create(APP_ID);
   Gtk::Window *window = nullptr;
@@ -214,11 +235,13 @@ int main(int argc, char **argv) {
       }
 
       window->show();
+#if FOCUSCLOCK_HAS_LAYER_SHELL
       if (opts.layer != GTK_LAYER_SHELL_LAYER_ENTRY_NUMBER) {
         auto surface = window->get_surface();
         auto empty_region = Cairo::Region::create();
         surface->set_input_region(empty_region);
       }
+#endif
     }
   });
 
