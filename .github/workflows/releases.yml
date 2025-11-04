@@ -80,7 +80,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: focusclock-linux
-          path: ${{github.workspace}}/focusclock-linux-x86_64.tar.gz
+          path: focusclock-linux-x86_64.tar.gz
           if-no-files-found: error
 
       - name: Upload release notes
