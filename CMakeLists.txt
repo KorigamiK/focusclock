@@ -13,6 +13,8 @@ endif()
 
 pkg_check_modules(gtkmm-4.0 REQUIRED IMPORTED_TARGET gtkmm-4.0)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 option(FOCUSCLOCK_ENABLE_LAYER_SHELL "Enable gtk4-layer-shell integration" ON)
 set(FOCUSCLOCK_HAS_LAYER_SHELL 0)
 if(FOCUSCLOCK_ENABLE_LAYER_SHELL)

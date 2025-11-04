@@ -2,14 +2,26 @@
 #include "utils.h"
 #include "version.h"
 #include <cairo.h>
+#include <glibmm/main.h>
 #include <glibmm/optioncontext.h>
 #include <glibmm/optionentry.h>
 #include <glibmm/optiongroup.h>
 #include <glibmm/ustring.h>
+#include <gdkmm/display.h>
+#include <gdkmm/monitor.h>
+#include <gdkmm/rectangle.h>
 #include <gtkmm/application.h>
 #include <gtkmm/cssprovider.h>
 #include <gtkmm/window.h>
 #include <iostream>
+
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <gdk/win32/gdkwin32.h>
+#endif
 
 #ifndef FOCUSCLOCK_HAS_LAYER_SHELL
 #define FOCUSCLOCK_HAS_LAYER_SHELL 0
@@ -71,10 +83,80 @@ static void setup_window_layer(Gtk::Window *window,
   }
 }
 #else
+namespace {
+#ifdef _WIN32
+void apply_win32_layer_options(Gtk::Window &window,
+                               const WindowLayerOptions &opts) {
+  auto surface = window.get_surface();
+  if (!surface) {
+    return;
+  }
+
+  const int width = surface->get_width();
+  const int height = surface->get_height();
+
+  Glib::RefPtr<Gdk::Display> display = window.get_display();
+  Glib::RefPtr<Gdk::Monitor> monitor;
+  if (display) {
+    monitor = display->get_monitor_at_surface(surface);
+  }
+
+  int area_x = 0;
+  int area_y = 0;
+  int area_width = GetSystemMetrics(SM_CXSCREEN);
+  int area_height = GetSystemMetrics(SM_CYSCREEN);
+  if (monitor) {
+    Gdk::Rectangle monitor_geometry;
+    monitor->get_geometry(monitor_geometry);
+    area_x = monitor_geometry.get_x();
+    area_y = monitor_geometry.get_y();
+    area_width = monitor_geometry.get_width();
+    area_height = monitor_geometry.get_height();
+  }
+
+  int x = area_x + opts.margin_left;
+  int y = area_y + opts.margin_top;
+
+  if (opts.anchor_right && !opts.anchor_left) {
+    x = area_x + area_width - width - opts.margin_right;
+  } else if (!opts.anchor_left && !opts.anchor_right) {
+    x = area_x + (area_width - width) / 2;
+  }
+
+  if (opts.anchor_bottom && !opts.anchor_top) {
+    y = area_y + area_height - height - opts.margin_bottom;
+  } else if (!opts.anchor_top && !opts.anchor_bottom) {
+    y = area_y + (area_height - height) / 2;
+  }
+
+  if (auto handle = gdk_win32_surface_get_handle(surface->gobj())) {
+    HWND hwnd = reinterpret_cast<HWND>(handle);
+    LONG_PTR ex_style = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE,
+                     ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT |
+                         WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE);
+    SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+    SetWindowPos(hwnd, HWND_TOPMOST, x, y, width, height,
+                 SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+  }
+
+  surface->set_input_region(Cairo::Region::create());
+}
+#endif
+} // namespace
+
 static void setup_window_layer(Gtk::Window *window,
-                               const WindowLayerOptions &) {
+                               const WindowLayerOptions &opts) {
   window->set_decorated(false);
   window->set_resizable(false);
+  window->set_focus_on_click(false);
+  window->set_focusable(false);
+#ifdef _WIN32
+  window->signal_realize().connect([window, opts]() {
+    Glib::signal_idle().connect_once(
+        [window, opts]() { apply_win32_layer_options(*window, opts); });
+  });
+#endif
 }
 #endif
 
