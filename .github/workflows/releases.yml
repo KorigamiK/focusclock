@@ -77,14 +77,14 @@ jobs:
           tar -czvf ${{github.workspace}}/focusclock-linux-x86_64.tar.gz ./*
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: focusclock-linux
           path: ${{github.workspace}}/focusclock-linux-x86_64.tar.gz
           if-no-files-found: error
 
       - name: Upload release notes
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-notes
           path: release_notes.md
@@ -151,7 +151,7 @@ jobs:
           zip -r ../focusclock-windows-x86_64.zip .
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: focusclock-windows
           path: focusclock-windows-x86_64.zip
@@ -164,19 +164,19 @@ jobs:
       - build-windows
     steps:
       - name: Download Linux artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: focusclock-linux
           path: artifacts
 
       - name: Download Windows artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: focusclock-windows
           path: artifacts
 
       - name: Download release notes
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: release-notes
           path: .
