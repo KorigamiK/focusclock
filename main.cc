@@ -9,6 +9,7 @@
 #include <gtkmm/application.h>
 #include <gtkmm/cssprovider.h>
 #include <gtkmm/window.h>
+#include <iostream>
 
 #ifndef FOCUSCLOCK_HAS_LAYER_SHELL
 #define FOCUSCLOCK_HAS_LAYER_SHELL 0
