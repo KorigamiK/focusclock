@@ -31,7 +31,6 @@ jobs:
 
       - name: Get version
         id: get_version
-        shell: bash
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "VERSION=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
@@ -40,7 +39,7 @@ jobs:
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "Creating release from tag ${GITHUB_REF#refs/tags/}"
           else
-            VERSION=$(echo "${GITHUB_SHA}" | cut -c1-7)
+            VERSION=$(git rev-parse --short HEAD)
             echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
             echo "Creating release from commit ${VERSION}"
           fi
@@ -126,7 +125,7 @@ jobs:
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "Preparing build from tag ${GITHUB_REF#refs/tags/}"
           else
-            VERSION=$(echo "${GITHUB_SHA}" | cut -c1-7)
+            VERSION=$(git rev-parse --short HEAD)
             echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
             echo "Preparing build from commit ${VERSION}"
           fi
