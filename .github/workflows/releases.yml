@@ -2,8 +2,6 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       version:
@@ -37,9 +35,13 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "VERSION=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
             echo "Creating manual release for v${{ github.event.inputs.version }}"
-          else
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "Creating release from tag ${GITHUB_REF#refs/tags/}"
+          else
+            VERSION=$(git rev-parse --short HEAD)
+            echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+            echo "Creating release from commit ${VERSION}"
           fi
 
       - name: Update CMakeLists.txt version
@@ -53,6 +55,9 @@ jobs:
           VERSION=${{ steps.get_version.outputs.VERSION }}
           VERSION_NUM=${VERSION#v}
           sed -n "/## \[$VERSION_NUM\]/,/## \[/p" CHANGELOG.md | sed '$d' > release_notes.md
+          if [ ! -s release_notes.md ]; then
+            echo "Automated release for ${VERSION}" > release_notes.md
+          fi
 
       - name: Install dependencies
         run: |
@@ -116,9 +121,13 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "VERSION=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
             echo "Preparing manual build for v${{ github.event.inputs.version }}"
-          else
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "Preparing build from tag ${GITHUB_REF#refs/tags/}"
+          else
+            VERSION=$(git rev-parse --short HEAD)
+            echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+            echo "Preparing build from commit ${VERSION}"
           fi
 
       - name: Update CMakeLists.txt version
