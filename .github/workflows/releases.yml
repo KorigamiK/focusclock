@@ -140,7 +140,7 @@ jobs:
 
       - name: Configure CMake (UCRT64)
         shell: msys2 {0}
-        run: cmake -S . -B build -G "Unix Makefiles" -DFOCUSCLOCK_ENABLE_LAYER_SHELL=OFF -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G "MinGW Makefiles" -DFOCUSCLOCK_ENABLE_LAYER_SHELL=OFF -DCMAKE_BUILD_TYPE=Release
 
       - name: Build (UCRT64)
         shell: msys2 {0}
