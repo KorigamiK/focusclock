@@ -38,7 +38,7 @@ void Clock::on_draw(const Cairo::RefPtr<Cairo::Context> &cr, int width,
   struct tm *timeinfo = localtime(&rawtime);
 
   static char buffer[6];
-  strftime(buffer, sizeof(buffer), "%I:%M", timeinfo);
+  strftime(buffer, sizeof(buffer), "%H:%M", timeinfo);
 
   cr->select_font_face(m_config.font_family, Cairo::ToyFontFace::Slant::NORMAL,
                        Cairo::ToyFontFace::Weight::BOLD);
