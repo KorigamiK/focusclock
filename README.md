@@ -12,6 +12,15 @@ Arch Linux users can install the package from the AUR:
 yay -S focusclock-git
 ```
 
+macOS users can install it with Homebrew:
+
+```sh
+brew install korigamik/tap/focusclock
+```
+
+Prebuilt Linux, Windows and universal macOS binaries are attached to each
+[GitHub release](https://github.com/KorigamiK/focusclock/releases).
+
 Or you can build it from source
 
 ## Building
