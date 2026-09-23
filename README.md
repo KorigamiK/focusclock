@@ -12,6 +12,15 @@ Arch Linux users can install the package from the AUR:
 yay -S focusclock-git
 ```
 
+macOS users can install it with Homebrew:
+
+```sh
+brew install korigamik/tap/focusclock
+```
+
+Prebuilt Linux, Windows and universal macOS binaries are attached to each
+[GitHub release](https://github.com/KorigamiK/focusclock/releases).
+
 Or you can build it from source
 
 ## Building
@@ -24,6 +33,14 @@ cd build
 cmake ..
 make
 ```
+
+### macOS
+
+On macOS the same `cmake` steps build a native Cocoa version instead (only
+Xcode Command Line Tools and CMake needed, no GTK). It floats above all
+windows and fullscreen apps on every Space, ignores the mouse, and has no Dock
+icon. `--layer` maps to window levels (0=desktop, 1=normal, 2=floating,
+3=overlay).
 
 You might also wanna add the keybinds like the following in your Hyprland config
 to your wm or similar:
