@@ -2,8 +2,6 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       version:
@@ -33,13 +31,18 @@ jobs:
 
       - name: Get version
         id: get_version
+        shell: bash
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "VERSION=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
             echo "Creating manual release for v${{ github.event.inputs.version }}"
-          else
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "Creating release from tag ${GITHUB_REF#refs/tags/}"
+          else
+            VERSION=$(echo "${GITHUB_SHA}" | cut -c1-7)
+            echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+            echo "Creating release from commit ${VERSION}"
           fi
 
       - name: Update CMakeLists.txt version
@@ -53,6 +56,9 @@ jobs:
           VERSION=${{ steps.get_version.outputs.VERSION }}
           VERSION_NUM=${VERSION#v}
           sed -n "/## \[$VERSION_NUM\]/,/## \[/p" CHANGELOG.md | sed '$d' > release_notes.md
+          if [ ! -s release_notes.md ]; then
+            echo "Automated release for ${VERSION}" > release_notes.md
+          fi
 
       - name: Install dependencies
         run: |
@@ -62,19 +68,19 @@ jobs:
             libgtkmm-4.0-dev libgtk4-layer-shell-dev
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config Release
+        run: cmake --build build --config Release
 
       - name: Install
         run: |
-          DESTDIR=${{github.workspace}}/package cmake --install ${{github.workspace}}/build
+          DESTDIR=$PWD/package cmake --install build
 
       - name: Package
         run: |
-          cd ${{github.workspace}}/package
-          tar -czvf ${{github.workspace}}/focusclock-linux-x86_64.tar.gz ./*
+          cd package
+          tar -czvf ../focusclock-linux-x86_64.tar.gz ./*
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
@@ -116,9 +122,13 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "VERSION=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
             echo "Preparing manual build for v${{ github.event.inputs.version }}"
-          else
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "Preparing build from tag ${GITHUB_REF#refs/tags/}"
+          else
+            VERSION=$(echo "${GITHUB_SHA}" | cut -c1-7)
+            echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+            echo "Preparing build from commit ${VERSION}"
           fi
 
       - name: Update CMakeLists.txt version
@@ -130,7 +140,7 @@ jobs:
 
       - name: Configure CMake (UCRT64)
         shell: msys2 {0}
-        run: cmake -S . -B build -G "Unix Makefiles" -DFOCUSCLOCK_ENABLE_LAYER_SHELL=OFF -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G "MinGW Makefiles" -DFOCUSCLOCK_ENABLE_LAYER_SHELL=OFF -DCMAKE_BUILD_TYPE=Release
 
       - name: Build (UCRT64)
         shell: msys2 {0}
