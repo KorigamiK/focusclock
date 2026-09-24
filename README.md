@@ -18,29 +18,28 @@ macOS users can install it with Homebrew:
 brew install korigamik/tap/focusclock
 ```
 
-Prebuilt Linux, Windows and universal macOS binaries are attached to each
+Prebuilt Linux (x86_64) and universal macOS binaries are attached to each
 [GitHub release](https://github.com/KorigamiK/focusclock/releases).
 
 Or you can build it from source
 
 ## Building
 
-Requires Gtkmm4, gtk4-layer-shell, CMake, pkg-config.
+Focus Clock is a small native app on each platform:
+
+- **Linux**: a Wayland layer-shell surface drawn with Cairo. Needs a compositor
+  that supports `wlr-layer-shell` (Hyprland, Sway, river, niri, KDE Plasma,
+  ...). Build dependencies: CMake, pkg-config, `wayland`, `wayland-protocols`
+  and `cairo`.
+- **macOS**: a Cocoa overlay drawn with Core Text. It floats above all windows
+  and fullscreen apps on every Space, ignores the mouse and has no Dock icon.
+  Only CMake and the Xcode Command Line Tools are needed.
 
 ```
-mkdir build
-cd build
-cmake ..
-make
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+sudo cmake --install build
 ```
-
-### macOS
-
-On macOS the same `cmake` steps build a native Cocoa version instead (only
-Xcode Command Line Tools and CMake needed, no GTK). It floats above all
-windows and fullscreen apps on every Space, ignores the mouse, and has no Dock
-icon. `--layer` maps to window levels (0=desktop, 1=normal, 2=floating,
-3=overlay).
 
 You might also wanna add the keybinds like the following in your Hyprland config
 to your wm or similar:
@@ -58,10 +57,8 @@ options:
 Usage:
   focusclock [OPTION?]
 
-Help Options:
+Options:
   -h, --help              Show help options
-
-Application Options:
   -v, --version           Show version information
   -t, --anchor-top        Anchor to the top edge
   -b, --anchor-bottom     Anchor to the bottom edge
@@ -75,8 +72,12 @@ Application Options:
   -c, --color             Text color (hex format: RGB, RGBA, RRGGBB, or RRGGBBAA)
   -F, --font-family       Font family name
   -a, --alpha             Text opacity (0.0-1.0, overridden by RGBA color)
-  -y, --layer             GTK shell layer (0=background, 1=bottom, 2=top, 3=overlay, 4=no_layer)
+  -y, --layer             Layer (0=background, 1=bottom, 2=top, 3=overlay)
 ```
+
+Anchoring one edge pins the clock to it (plus the margin); anchoring both
+opposite edges, or neither, centers it on that axis. On macOS `--layer` maps
+to window levels (desktop, normal, floating, overlay).
 
 ## Changelog
 
@@ -85,8 +86,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
 # References
 
 - https://github.com/nwg-piotr/nwg-wrapper/
-- https://github.com/wmww/gtk4-layer-shell/
-- https://www.gtk.org/docs/language-bindings/cpp
+- https://wayland.app/protocols/wlr-layer-shell-unstable-v1
 
 ## License
 

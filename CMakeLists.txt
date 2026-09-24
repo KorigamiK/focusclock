@@ -8,63 +8,63 @@ set(CMAKE_CXX_STANDARD 17)
 include(GNUInstallDirs)
 
 if(APPLE)
-  # Native Cocoa build: no GTK needed.
+  # Native Cocoa build.
   enable_language(OBJCXX)
 
   add_executable(${PROJECT_NAME}
     macos/main.mm
+    options.cc
     utils.cc
   )
 
-  target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
   target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
   target_link_libraries(${PROJECT_NAME} PRIVATE
     "-framework Cocoa" "-framework CoreText")
-else()
-  include(FindPkgConfig)
-  if(NOT PKG_CONFIG_FOUND)
-    message(FATAL_ERROR "pkg-config not found!" )
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  # Native Wayland (wlr-layer-shell) build.
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
+  pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
+  pkg_check_modules(WAYLAND_PROTOCOLS REQUIRED wayland-protocols)
+  pkg_get_variable(WAYLAND_PROTOCOLS_DIR wayland-protocols pkgdatadir)
+  pkg_get_variable(WAYLAND_SCANNER wayland-scanner wayland_scanner)
+  if(NOT WAYLAND_SCANNER)
+    find_program(WAYLAND_SCANNER wayland-scanner REQUIRED)
   endif()
 
-  pkg_check_modules(gtkmm-4.0 REQUIRED IMPORTED_TARGET gtkmm-4.0)
-
-  option(FOCUSCLOCK_ENABLE_LAYER_SHELL "Enable gtk4-layer-shell integration" ON)
-  set(FOCUSCLOCK_HAS_LAYER_SHELL 0)
-  if(FOCUSCLOCK_ENABLE_LAYER_SHELL)
-    pkg_check_modules(GTK4_LAYER_SHELL QUIET gtk4-layer-shell-0)
-    if(GTK4_LAYER_SHELL_FOUND)
-      set(FOCUSCLOCK_HAS_LAYER_SHELL 1)
-    else()
-      message(WARNING
-        "gtk4-layer-shell-0 not found; building without layer-shell support")
-    endif()
-  endif()
+  # layer-shell's get_popup references xdg_popup, so xdg-shell is needed too.
+  set(PROTOCOL_SOURCES)
+  foreach(xml
+      ${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml
+      ${CMAKE_SOURCE_DIR}/protocols/wlr-layer-shell-unstable-v1.xml)
+    get_filename_component(name ${xml} NAME_WE)
+    set(header ${CMAKE_BINARY_DIR}/${name}-client-protocol.h)
+    set(code ${CMAKE_BINARY_DIR}/${name}-protocol.c)
+    add_custom_command(
+      OUTPUT ${header} ${code}
+      COMMAND ${WAYLAND_SCANNER} client-header ${xml} ${header}
+      COMMAND ${WAYLAND_SCANNER} private-code ${xml} ${code}
+      DEPENDS ${xml}
+      VERBATIM)
+    list(APPEND PROTOCOL_SOURCES ${header} ${code})
+  endforeach()
 
   add_executable(${PROJECT_NAME}
-    clock.cc
-    main.cc
+    linux/main.cc
+    options.cc
     utils.cc
+    ${PROTOCOL_SOURCES}
   )
 
-  target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR})
-
-  target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::gtkmm-4.0)
-  if(FOCUSCLOCK_HAS_LAYER_SHELL)
-    target_include_directories(${PROJECT_NAME} PRIVATE
-      ${GTK4_LAYER_SHELL_INCLUDE_DIRS})
-    target_link_directories(${PROJECT_NAME} PRIVATE
-      ${GTK4_LAYER_SHELL_LIBRARY_DIRS})
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-      ${GTK4_LAYER_SHELL_LIBRARIES})
-    target_compile_options(${PROJECT_NAME} PRIVATE
-      ${GTK4_LAYER_SHELL_CFLAGS_OTHER})
-  endif()
-
-  target_compile_definitions(${PROJECT_NAME} PRIVATE
-    FOCUSCLOCK_HAS_LAYER_SHELL=${FOCUSCLOCK_HAS_LAYER_SHELL})
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+    PkgConfig::WAYLAND_CLIENT PkgConfig::CAIRO)
+else()
+  message(FATAL_ERROR "focusclock supports macOS and Linux (Wayland) only")
 endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+  ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
 
 install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

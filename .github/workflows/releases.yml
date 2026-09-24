@@ -58,8 +58,7 @@ jobs:
         run: |
           apt-get --assume-yes update
           apt-get --assume-yes install build-essential cmake pkg-config \
-            wayland-protocols \
-            libgtkmm-4.0-dev libgtk4-layer-shell-dev
+            libwayland-dev wayland-protocols libcairo2-dev
 
       # Relative paths: inside the container ${{ github.workspace }} expands
       # to the host path, not the container's /__w/... workspace.
@@ -90,73 +89,6 @@ jobs:
         with:
           name: release-notes
           path: release_notes.md
-          if-no-files-found: error
-
-  build-windows:
-    runs-on: windows-2022
-    needs: build-linux
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          install: >-
-            mingw-w64-ucrt-x86_64-toolchain
-            mingw-w64-ucrt-x86_64-cmake
-            mingw-w64-ucrt-x86_64-pkgconf
-            mingw-w64-ucrt-x86_64-gtkmm-4.0
-            zip
-          update: true
-
-      - name: Get version
-        id: get_version
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "VERSION=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-            echo "Preparing manual build for v${{ github.event.inputs.version }}"
-          else
-            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-            echo "Preparing build from tag ${GITHUB_REF#refs/tags/}"
-          fi
-
-      - name: Update CMakeLists.txt version
-        if: github.event_name == 'workflow_dispatch'
-        shell: msys2 {0}
-        run: |
-          VERSION="${{ github.event.inputs.version }}"
-          sed -i "s/project(focusclock VERSION [0-9.]*)/project(focusclock VERSION ${VERSION})/" CMakeLists.txt
-
-      - name: Configure CMake (UCRT64)
-        shell: msys2 {0}
-        run: cmake -S . -B build -G "MinGW Makefiles" -DFOCUSCLOCK_ENABLE_LAYER_SHELL=OFF -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build (UCRT64)
-        shell: msys2 {0}
-        run: cmake --build build --config Release
-
-      - name: Stage Windows artifacts
-        shell: msys2 {0}
-        run: |
-          mkdir -p dist
-          cp build/focusclock.exe dist/
-          cp README.md dist/
-          cp LICENSE dist/
-
-      - name: Package Windows archive
-        shell: msys2 {0}
-        run: |
-          cd dist
-          zip -r ../focusclock-windows-x86_64.zip .
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: focusclock-windows
-          path: focusclock-windows-x86_64.zip
           if-no-files-found: error
 
   build-macos:
@@ -202,19 +134,12 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build-linux
-      - build-windows
       - build-macos
     steps:
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
           name: focusclock-linux
-          path: artifacts
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: focusclock-windows
           path: artifacts
 
       - name: Download macOS artifact
@@ -234,7 +159,6 @@ jobs:
         with:
           files: |
             artifacts/focusclock-linux-x86_64.tar.gz
-            artifacts/focusclock-windows-x86_64.zip
             artifacts/focusclock-macos-universal.tar.gz
           body_path: release_notes.md
           generate_release_notes: false
