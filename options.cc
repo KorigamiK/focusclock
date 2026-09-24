@@ -26,7 +26,8 @@ static void print_usage(const char *prog) {
          "  -a, --alpha             Text opacity (0.0-1.0, overridden by "
          "RGBA color)\n"
          "  -y, --layer             Layer (0=background, 1=bottom, 2=top, "
-         "3=overlay)\n";
+         "3=overlay)\n"
+         "  -H, --24-hour           Use 24-hour time\n";
 }
 
 int parse_options(int argc, char **argv, ClockConfig &config,
@@ -50,11 +51,12 @@ int parse_options(int argc, char **argv, ClockConfig &config,
       {"font-family", required_argument, nullptr, 'F'},
       {"alpha", required_argument, nullptr, 'a'},
       {"layer", required_argument, nullptr, 'y'},
+      {"24-hour", no_argument, nullptr, 'H'},
       {nullptr, 0, nullptr, 0},
   };
 
   int opt;
-  while ((opt = getopt_long(argc, argv, "hvtblrT:B:L:R:f:c:F:a:y:",
+  while ((opt = getopt_long(argc, argv, "hvtblrT:B:L:R:f:c:F:a:y:H",
                             long_options, nullptr)) != -1) {
     switch (opt) {
     case 'h':
@@ -76,6 +78,7 @@ int parse_options(int argc, char **argv, ClockConfig &config,
     case 'F': config.font_family = optarg; break;
     case 'a': alpha = atof(optarg); break;
     case 'y': opts.layer = atoi(optarg); break;
+    case 'H': config.twenty_four_hour = true; break;
     default:
       print_usage(argv[0]);
       return 1;
