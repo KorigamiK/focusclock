@@ -8,8 +8,15 @@ struct ClockConfig {
   double font_size = 32.0;
   double text_padding_ratio = 0.5;
 
+  // Show 13:00 instead of 01:00
+  bool twenty_four_hour = false;
+
   // Colors
   double text_color[4] = {1.0, 1.0, 1.0, 0.5};
+
+  const char *time_format() const {
+    return twenty_four_hour ? "%H:%M" : "%I:%M";
+  }
 };
 
 struct WindowLayerOptions {

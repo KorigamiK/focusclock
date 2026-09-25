@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Space and over fullscreen apps, with the same command-line options
 - Universal macOS binary in GitHub releases
 - Homebrew formula: `brew install korigamik/tap/focusclock`
+- `-H, --24-hour` option for 24-hour time (#3)
 
 ### Changed
 - Linux build rewritten as a native Wayland `wlr-layer-shell` client drawn

@@ -147,7 +147,7 @@ void draw(App &app) {
 
   time_t now = time(nullptr);
   char text[6];
-  strftime(text, sizeof(text), "%I:%M", localtime(&now));
+  strftime(text, sizeof(text), app.config.time_format(), localtime(&now));
 
   cairo_surface_t *surface = cairo_image_surface_create_for_data(
       static_cast<unsigned char *>(buf->data), CAIRO_FORMAT_ARGB32, pw, ph,

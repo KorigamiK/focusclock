@@ -96,7 +96,8 @@ static CTFontRef create_bold_font(const std::string &family, double size) {
   time_t rawtime;
   time(&rawtime);
   char buffer[6];
-  strftime(buffer, sizeof(buffer), "%I:%M", localtime(&rawtime));
+  strftime(buffer, sizeof(buffer), _config.time_format(),
+           localtime(&rawtime));
 
   CGContextRef cr = [NSGraphicsContext currentContext].CGContext;
   CTLineRef line = [self createLine:buffer];
