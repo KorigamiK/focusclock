@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-10-19
+
+### Fixed
+- Release publication and Homebrew updates are no longer blocked by the
+  unsupported Windows build
+- A missing Homebrew tap token now fails the update instead of silently
+  skipping it
+
+### Changed
+- Document how to start the clock after installation and which macOS display
+  it uses
+
 ## [2.1.0] - 2026-09-24
 
 ### Added
