@@ -18,8 +18,19 @@ macOS users can install it with Homebrew:
 brew install korigamik/tap/focusclock
 ```
 
-Prebuilt Linux (x86_64) and universal macOS binaries are attached to each
-[GitHub release](https://github.com/KorigamiK/focusclock/releases).
+Then start the clock from Terminal:
+
+```sh
+focusclock -br -B 50
+```
+
+This places it in the bottom-right corner with a 50-point bottom margin.
+Press Ctrl-C in that Terminal to stop it. The clock has no Dock icon or
+application window to open after installation. Homebrew builds it from source
+and requires the Xcode Command Line Tools (`xcode-select --install`).
+
+Prebuilt Linux (x86_64) and universal macOS binaries are available from v2.1.1
+onward on the [GitHub releases page](https://github.com/KorigamiK/focusclock/releases).
 
 Or you can build it from source
 
@@ -79,6 +90,13 @@ Options:
 Anchoring one edge pins the clock to it (plus the margin); anchoring both
 opposite edges, or neither, centers it on that axis. On macOS `--layer` maps
 to window levels (desktop, normal, floating, overlay).
+
+On macOS, the clock appears on the primary display, including that display's
+Spaces and fullscreen apps. It does not follow the mouse or appear on every
+monitor. To put it on an external monitor, make that monitor the main display
+in System Settings > Displays. The clock repositions automatically when the
+display configuration changes. Margins are measured from the full screen edge,
+so allow room for the menu bar or Dock when needed.
 
 ## Changelog
 

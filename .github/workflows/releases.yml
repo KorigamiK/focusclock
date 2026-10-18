@@ -179,8 +179,8 @@ jobs:
         id: token
         run: |
           if [ -z "$TAP_TOKEN" ]; then
-            echo "::warning::HOMEBREW_TAP_TOKEN is not set; skipping Homebrew tap update"
-            echo "present=false" >> $GITHUB_OUTPUT
+            echo "::error::HOMEBREW_TAP_TOKEN is required to publish the Homebrew formula"
+            exit 1
           else
             echo "present=true" >> $GITHUB_OUTPUT
           fi
@@ -198,7 +198,8 @@ jobs:
         run: |
           TAG="${{ needs.build-linux.outputs.version }}"
           URL="https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${TAG}.tar.gz"
-          SHA256=$(curl -fsSL "$URL" | sha256sum | cut -d' ' -f1)
+          curl -fsSL --retry 3 "$URL" -o focusclock-source.tar.gz
+          SHA256=$(sha256sum focusclock-source.tar.gz | cut -d' ' -f1)
           mkdir -p tap/Formula
           cat > tap/Formula/focusclock.rb <<EOF
           class Focusclock < Formula
@@ -218,8 +219,17 @@ jobs:
               system "cmake", "--install", "build"
             end
 
+            def caveats
+              <<~EOS
+                Start the clock from Terminal:
+                  focusclock -br -B 50
+                Press Ctrl-C to stop it. On macOS the clock uses the primary display.
+              EOS
+            end
+
             test do
               assert_match version.to_s, shell_output("#{bin}/focusclock --version")
+              assert_match "--24-hour", shell_output("#{bin}/focusclock --help")
             end
           end
           EOF
