@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(focusclock VERSION 2.1.1)
+project(focusclock VERSION 2.2.0)
 
 configure_file(version.h.in version.h)
 
