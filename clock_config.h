@@ -20,6 +20,9 @@ struct ClockConfig {
 };
 
 struct WindowLayerOptions {
+#ifdef __APPLE__
+  bool secondary_monitor = false;
+#endif
   bool anchor_top = false;
   bool anchor_bottom = false;
   bool anchor_left = false;

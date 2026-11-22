@@ -183,7 +183,12 @@ static CTFontRef create_bold_font(const std::string &family, double size) {
 // Place the window like a layer-shell surface: anchoring one edge pins it
 // there (plus margin); anchoring both or neither centers on that axis.
 - (void)position {
-  NSScreen *screen = NSScreen.screens.firstObject;
+  NSArray<NSScreen *> *screens = NSScreen.screens;
+  // The first screen is the primary display. Keep the preference when the
+  // secondary is unplugged so reconnecting it moves the clock back there.
+  NSScreen *screen = _opts.secondary_monitor && screens.count > 1
+                         ? screens[1]
+                         : screens.firstObject;
   if (screen == nil)
     return;
 
