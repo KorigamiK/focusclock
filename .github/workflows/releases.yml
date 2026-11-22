@@ -92,7 +92,7 @@ jobs:
           if-no-files-found: error
 
   build-macos:
-    runs-on: macos-14
+    runs-on: macos-15
     needs: build-linux
     steps:
       - uses: actions/checkout@v4
